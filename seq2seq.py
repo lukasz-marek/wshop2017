@@ -4,7 +4,7 @@ Created on Sun May 21 21:56:35 2017
 
 @author: Łukasz Marek
 """
-from random import choice
+from random import choice, uniform
 from keras.layers.recurrent import LSTM
 from keras.models import Sequential 
 from keras.utils import np_utils
@@ -19,7 +19,8 @@ class DataTransformer:
     _end = "$"
     
     def __init__(self, X, Y, sequence_length):
-        characters = set([x[0] for x in X.tolist() + Y.tolist()])
+        characters = set([x[0].upper() for x in X.tolist() + Y.tolist()])
+        characters.update(set([x[0].lower() for x in X.tolist() + Y.tolist()]))
         characters.add(DataTransformer._pad)
         self._decoder = dict(enumerate(characters))
         self._encoder = {v:k for k,v in self._decoder.items()}
@@ -65,11 +66,16 @@ class DataTransformer:
         return "".join(decoded)
     
     def generate(self, model, limit = None):
+        def generate_randomizing_vector():
+            seq = []
+            for _ in range(len(self._decoder.values())):
+                seq.append(uniform(0,0.1))
+            return np.array(seq)
         starter = choice(list(set(self._decoder.values()) 
         - set([DataTransformer._start, DataTransformer._end, DataTransformer._pad]))).upper()
         pattern = self.encode(DataTransformer._start + starter)
         pattern_as_list = [DataTransformer._start, starter]
-        prediction = self._decoder[np.argmax(model.predict(self._reshape(pattern), verbose=0))]
+        prediction = self._decoder[np.argmax(model.predict(self._reshape(pattern), verbose=0) + generate_randomizing_vector())]
         pattern_as_list.append(prediction)
         generated = DataTransformer._start + starter + prediction
         count = limit
@@ -77,7 +83,7 @@ class DataTransformer:
             if len(pattern_as_list) > self._sequence_length:
                 pattern_as_list.pop(0)
             pattern = self._reshape(self.encode("".join(pattern_as_list)))
-            prediction = self._decoder[np.argmax(model.predict(pattern, verbose=0))]
+            prediction = self._decoder[np.argmax(model.predict(pattern, verbose=0) + generate_randomizing_vector())]
             pattern_as_list.append(prediction)
             generated += prediction
             if count != None:
@@ -88,8 +94,8 @@ class DataTransformer:
 
        
 data = pd.read_csv("training_data.csv", sep = ";",header = None)
-X = data.get_values()[:,0]
-Y = data.get_values()[:,-1]
+X = data.get_values()[:,0][0:500]
+Y = data.get_values()[:,-1][0:500]
 
 transformer = DataTransformer(X,Y,7)
 
@@ -102,4 +108,4 @@ model.add(Dropout(0.2))
 model.add(Dense(transformer.Y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 
-model.fit(transformer.X, transformer.Y, epochs=10, batch_size=1024)
+model.fit(transformer.X, transformer.Y, epochs=500, batch_size=1024)
