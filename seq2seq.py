@@ -72,7 +72,7 @@ class DataTransformer:
                 seq.append(uniform(0,0.1))
             return np.array(seq)
         starter = choice(list(set(self._decoder.values()) 
-        - set([DataTransformer._start, DataTransformer._end, DataTransformer._pad]))).upper()
+        - set([DataTransformer._start, DataTransformer._end, DataTransformer._pad," "]))).upper()
         pattern = self.encode(DataTransformer._start + starter)
         pattern_as_list = [DataTransformer._start, starter]
         prediction = self._decoder[np.argmax(model.predict(self._reshape(pattern), verbose=0) + generate_randomizing_vector())]
