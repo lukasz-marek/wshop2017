@@ -14,7 +14,7 @@ Y = data[:,-1].tolist()
 characters = set()
 for chain in X:
     for letter in set(chain):
-        characters.update(letter.lower(),letter.upper())
+        characters.update([letter.lower(),letter.upper()])
 for chain in Y:
     for letter in set(chain):
-        characters.update(letter.lower(),letter.upper())
+        characters.update([letter.lower(),letter.upper()])
