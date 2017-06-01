@@ -59,6 +59,7 @@ with open("data_with_turbulences.csv","w+") as output:
         name = choice(names)[0]
         surname = choice(surnames)[0]
         text = name + " " + surname
+        output.write(text + ";" + text + "\n")
         for _ in range(5):
             for function in functions:
                 output.write(text + ";" + function(text) + "\n")
