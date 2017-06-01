@@ -62,4 +62,4 @@ with open("data_with_turbulences.csv","w+") as output:
         output.write(text + ";" + text + "\n")
         for _ in range(5):
             for function in functions:
-                output.write(text + ";" + function(text) + "\n")
+                output.write(function(text) + ";" + text + "\n")
