@@ -5,7 +5,7 @@ Created on Sun May 21 21:56:35 2017
 @author: Łukasz Marek
 """
 from random import choice, uniform
-from keras.layers.recurrent import LSTM
+from keras.layers.recurrent import GRU
 from keras.models import Sequential 
 from keras.utils import np_utils
 from keras.layers import Dense
@@ -94,18 +94,18 @@ class DataTransformer:
 
        
 data = pd.read_csv("training_data.csv", sep = ";",header = None)
-X = data.get_values()[:,0][0:500]
-Y = data.get_values()[:,-1][0:500]
+X = data.get_values()[:,0]
+Y = data.get_values()[:,-1]
 
 transformer = DataTransformer(X,Y,7)
 
     
 model = Sequential()
-model.add(LSTM(100, input_shape=(transformer.X.shape[1], transformer.X.shape[2]),return_sequences = True))
-model.add(LSTM(100,return_sequences = True))
-model.add(LSTM(100))
-model.add(Dropout(0.2))
+model.add(GRU(transformer.Y.shape[1] * 4,dropout = 0.0, input_shape=(transformer.X.shape[1], transformer.X.shape[2]),return_sequences = True,unroll = True, implementation = 0))
+model.add(GRU(transformer.Y.shape[1] * 4, dropout = 0.1, return_sequences = True,unroll = True, implementation = 0))
+model.add(GRU(transformer.Y.shape[1] * 4,dropout = 0.1,unroll = True, implementation = 0))
 model.add(Dense(transformer.Y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-
-model.fit(transformer.X, transformer.Y, epochs=500, batch_size=1024)
+for i in range(500):
+    model.fit(transformer.X, transformer.Y, epochs=1, batch_size=64)
+    print(str(i) + ": " + transformer.generate(model, limit = 25))
