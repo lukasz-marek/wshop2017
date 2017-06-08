@@ -15,18 +15,18 @@ from keras.layers import Dense
 from keras.layers.wrappers import TimeDistributed
 from keras.layers import Activation
 from keras.layers.core import RepeatVector
-
+from random import choice
 
 CHUNK_SIZE = 1000
 BATCH_SIZE = 100
 UNKNOWN = "<UNKNOWN>"
 PADDING = "PADDING"
-VOCABULARY_SIZE = 1000
+VOCABULARY_SIZE = 500
 
-HIDDEN_LAYER_SIZE = 1000
-NUMBER_OF_HIDDEN_LAYERS = 5
+HIDDEN_LAYER_SIZE = 500
+NUMBER_OF_HIDDEN_LAYERS = 2
 
-MAX_SENTENCE_LENGTH = 100 
+MAX_SENTENCE_LENGTH = 20 
 
 NUMBER_TO_LETTER = {0:PADDING}
 NUMBER_TO_LETTER.update(dict({(i + 1, chr(i)) for i in range(VOCABULARY_SIZE)}))
@@ -55,6 +55,13 @@ def data():
         yield x, sequences
     raise StopIteration
 
+def from_prediction(y):
+    result = []
+    for col_id in range(MAX_SENTENCE_LENGTH):
+        symbol = NUMBER_TO_LETTER[np.argmax(y[:, col_id])]
+        if symbol != PADDING:
+            result.append(symbol)
+    return "".join(result)
 #encoder
 model = Sequential()
 model.add(Embedding(VOCABULARY_SIZE + 2, CHUNK_SIZE, input_length=MAX_SENTENCE_LENGTH, mask_zero=True))
@@ -62,13 +69,14 @@ model.add(LSTM(HIDDEN_LAYER_SIZE))
 #decoder
 model.add(RepeatVector(MAX_SENTENCE_LENGTH))
 for _ in range(NUMBER_OF_HIDDEN_LAYERS):
-    model.add(LSTM(HIDDEN_LAYER_SIZE, return_sequences=True))
+    model.add(LSTM(HIDDEN_LAYER_SIZE, return_sequences=True, dropout=0.3))
 model.add(TimeDistributed(Dense(VOCABULARY_SIZE + 2)))
 model.add(Activation('softmax'))
 model.compile(loss='categorical_crossentropy',
             optimizer='rmsprop',
             metrics=['accuracy'])
 #training
-for epoch in range(1):
+for epoch in range(100):
     for X, Y in data():
         model.fit(X, Y, batch_size=BATCH_SIZE, epochs=1)
+        print(from_prediction(model.predict(np.reshape(choice(X),(1,MAX_SENTENCE_LENGTH)))))
