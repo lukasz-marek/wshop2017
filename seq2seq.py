@@ -9,7 +9,6 @@ from keras.layers.recurrent import GRU
 from keras.models import Sequential 
 from keras.utils import np_utils
 from keras.layers import Dense
-from keras.layers import Dropout
 import numpy as np
 import pandas as pd
 
@@ -69,7 +68,7 @@ class DataTransformer:
         def generate_randomizing_vector():
             seq = []
             for _ in range(len(self._decoder.values())):
-                seq.append(uniform(0,0.1))
+                seq.append(uniform(0.2,0.5))
             return np.array(seq)
         starter = choice(list(set(self._decoder.values()) 
         - set([DataTransformer._start, DataTransformer._end, DataTransformer._pad," "]))).upper()
@@ -101,11 +100,11 @@ transformer = DataTransformer(X,Y,7)
 
     
 model = Sequential()
-model.add(GRU(transformer.Y.shape[1] * 4,dropout = 0.0, input_shape=(transformer.X.shape[1], transformer.X.shape[2]),return_sequences = True,unroll = True, implementation = 0))
-model.add(GRU(transformer.Y.shape[1] * 4, dropout = 0.1, return_sequences = True,unroll = True, implementation = 0))
-model.add(GRU(transformer.Y.shape[1] * 4,dropout = 0.1,unroll = True, implementation = 0))
+model.add(GRU(transformer.Y.shape[1] * 4,dropout = 0.0, input_shape=(transformer.X.shape[1], transformer.X.shape[2]),return_sequences = True,implementation=2))
+model.add(GRU(transformer.Y.shape[1] * 4, dropout = 0.1, return_sequences = True,implementation=2))
+model.add(GRU(transformer.Y.shape[1] * 4, dropout = 0.1,unroll = True))
 model.add(Dense(transformer.Y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-for i in range(500):
-    model.fit(transformer.X, transformer.Y, epochs=1, batch_size=64)
-    print(str(i) + ": " + transformer.generate(model, limit = 25))
+for i in range(10):
+    model.fit(transformer.X, transformer.Y, epochs=30, batch_size=16384, verbose = False)
+    print(str(i) + ": " + transformer.generate(model, limit = 250))
