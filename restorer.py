@@ -37,7 +37,8 @@ LETTER_TO_NUMBER.update(dict({(chr(i), i + 1) for i in range(VOCABULARY_SIZE)}))
 LETTER_TO_NUMBER[UNKNOWN] = VOCABULARY_SIZE + 1
 
 def map_onto_numbers(sentence):
-    return [LETTER_TO_NUMBER[x] if x in LETTER_TO_NUMBER else LETTER_TO_NUMBER[UNKNOWN] for x in sentence][0:MAX_SENTENCE_LENGTH]
+    return [LETTER_TO_NUMBER[x] if x in LETTER_TO_NUMBER 
+            else LETTER_TO_NUMBER[UNKNOWN] for x in sentence][0:MAX_SENTENCE_LENGTH]
 
 
 def data():
