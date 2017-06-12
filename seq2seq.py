@@ -139,7 +139,7 @@ class Generator:
                     yield prefix + result
                 elif len(prefix) + len(result) < max_sequence_length:
                     results.add(result)
-            for result in result:
+            for result in results:
                 if result not in sequences_in_progress:
                     sequences_in_progress.append(result)
         raise StopIteration
