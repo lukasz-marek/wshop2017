@@ -11,6 +11,7 @@ from keras.utils import np_utils
 from keras.layers import Dense
 import numpy as np
 import pandas as pd
+import h5py
 
 class DataTransformer:
     _pad = "?"
@@ -67,8 +68,8 @@ class DataTransformer:
     def generate(self, model, limit = None):
         def generate_randomizing_vector():
             seq = []
-            for _ in range(len(self._decoder.values())):
-                seq.append(uniform(0.2,0.5))
+            for _ in range(self.Y.shape[1]):
+                seq.append(uniform(0,1))
             return np.array(seq)
         starter = choice(list(set(self._decoder.values()) 
         - set([DataTransformer._start, DataTransformer._end, DataTransformer._pad," "]))).upper()
@@ -82,7 +83,7 @@ class DataTransformer:
             if len(pattern_as_list) > self._sequence_length:
                 pattern_as_list.pop(0)
             pattern = self._reshape(self.encode("".join(pattern_as_list)))
-            prediction = self._decoder[np.argmax(model.predict(pattern, verbose=0) + generate_randomizing_vector())]
+            prediction = self._decoder[np.argmax(model.predict(pattern, verbose=0))]
             pattern_as_list.append(prediction)
             generated += prediction
             if count != None:
@@ -98,13 +99,23 @@ Y = data.get_values()[:,-1]
 
 transformer = DataTransformer(X,Y,7)
 
+
+LAYER_SIZE = 30
+NUMBER_OF_HIDDEN_LAYERS = 2
     
 model = Sequential()
-model.add(GRU(transformer.Y.shape[1] * 4,dropout = 0.0, input_shape=(transformer.X.shape[1], transformer.X.shape[2]),return_sequences = True,implementation=2))
-model.add(GRU(transformer.Y.shape[1] * 4, dropout = 0.1, return_sequences = True,implementation=2))
-model.add(GRU(transformer.Y.shape[1] * 4, dropout = 0.1,unroll = True))
+X_train = transformer.X[:int(len(transformer.X) * 0.8)]
+X_test = transformer.X[int(len(transformer.X) * 0.8):]
+Y_train = transformer.Y[:int(len(transformer.Y) * 0.8)]
+Y_test = transformer.Y[int(len(transformer.Y) * 0.8):]
+
+model.add(GRU(LAYER_SIZE, input_shape=(transformer.X.shape[1],
+                                                     transformer.X.shape[2]),return_sequences = True))
+for _ in range(NUMBER_OF_HIDDEN_LAYERS -1):
+    model.add(GRU(LAYER_SIZE, return_sequences=True))
+model.add(GRU(LAYER_SIZE))
 model.add(Dense(transformer.Y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-for i in range(10):
-    model.fit(transformer.X, transformer.Y, epochs=30, batch_size=16384, verbose = False)
-    print(str(i) + ": " + transformer.generate(model, limit = 250))
+for i in range(300):
+    model.fit(X_train, Y_train, epochs=5, batch_size=120000, verbose=True, validation_data=(X_test,Y_test))
+    model.save("generator.h5")
