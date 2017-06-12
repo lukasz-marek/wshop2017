@@ -119,7 +119,7 @@ class Generator:
         while len(sequences_in_progress) > 0:
             current_sequence = sequences_in_progress.pop()
             analyzed_sequence = current_sequence
-            while len(current_sequence) > self._sequence_length:
+            while len(analyzed_sequence) > self._sequence_length:
                 analyzed_sequence = analyzed_sequence[1:]
             analyzed_sequence = self._encode(analyzed_sequence)
             prediction = self._model.predict(self._reshape_input(analyzed_sequence), verbose = False)
@@ -178,8 +178,9 @@ Y_train = transformer.Y[:int(len(transformer.Y) * 0.8)]
 Y_test = transformer.Y[int(len(transformer.Y) * 0.8):]
 
 generator = transformer.create_generator(load_model("generator.h5"))
+print("Generating...")
 
-for similar in generator.generate_similar("Terence Pratchett", branching_factor=5, max_sequence_length=50):
+for similar in generator.generate_similar("Terence Pratchett", branching_factor=2, max_sequence_length=20):
     print(similar)
 
 """model = Sequential()
