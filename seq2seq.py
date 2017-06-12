@@ -113,7 +113,7 @@ class Generator:
     def _generate_suffixes(self, sequence, branching_factor, max_sequence_length):
         prefix = ""
         while len(sequence) > self._sequence_length:
-            prefix += sequence[1]
+            prefix += sequence[0]
             sequence = sequence[1:]
         sequences_in_progress = [sequence]
         while len(sequences_in_progress) > 0:
