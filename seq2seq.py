@@ -129,7 +129,7 @@ class Generator:
                 possibility = np.argmax(prediction)
                 prediction[possibility] = -1
                 possibilities.append(possibility)
-            results = []
+            results = set()
             for symbol in possibilities:
                 meaning = self._decoder[symbol]
                 result = [x for x in current_sequence]
@@ -137,9 +137,11 @@ class Generator:
                 result = "".join(result)
                 if meaning == DataTransformer._end:
                     yield prefix + result
-                elif len(result) < max_sequence_length:
-                    results.append(result)
-            sequences_in_progress.extend(results)
+                elif len(prefix) + len(result) < max_sequence_length:
+                    results.add(result)
+            for result in result:
+                if result not in sequences_in_progress:
+                    sequences_in_progress.append(result)
         raise StopIteration
 
     def generate_similar(self, base_text, branching_factor=3, max_sequence_length=25):
