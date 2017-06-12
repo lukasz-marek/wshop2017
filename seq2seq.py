@@ -111,7 +111,9 @@ class Generator:
         return np.reshape(array,(1,self._sequence_length))
 
     def _generate_suffixes(self, sequence, branching_factor, max_sequence_length):
+        prefix = ""
         while len(sequence) > self._sequence_length:
+            prefix += sequence[1]
             sequence = sequence[1:]
         sequences_in_progress = [sequence]
         while len(sequences_in_progress) > 0:
@@ -134,7 +136,7 @@ class Generator:
                 result.append(meaning)
                 result = "".join(result)
                 if meaning == DataTransformer._end:
-                    yield result
+                    yield prefix + result
                 elif len(result) < max_sequence_length:
                     results.append(result)
             sequences_in_progress.extend(results)
