@@ -19,7 +19,7 @@ def generate_pairs(element, max_input_length):
             input.pop(0)
     return pairs
 
-SEQUENCE_LENGTH = 4
+SEQUENCE_LENGTH = 7
     
 data = pd.read_csv("data.csv",header=None).get_values().tolist()
 with open("training_data.csv","w+") as output:

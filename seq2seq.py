@@ -54,7 +54,7 @@ class DataTransformer:
         if len(to_encode) < self._sequence_length:
             to_encode += DataTransformer._pad * (self._sequence_length - len(to_encode))
         encoded = list(map(lambda letter: self._encoder[letter],to_encode))
-        return np.reshape(np.array(encoded[::-1]),(1,4))
+        return np.reshape(np.array(encoded[::-1]),(1,self._sequence_length))
     
     def decode(self,array):
         decoded = filter(lambda x: x!= DataTransformer._pad,map(lambda x: self._decoder[round(x)],reversed(array.tolist())))
@@ -160,7 +160,7 @@ class Generator:
                 yield value
         raise StopIteration
             
-SEQUENCE_LENGTH = 4
+SEQUENCE_LENGTH = 7
        
 data = pd.read_csv("training_data.csv", sep = ";",header = None)
 X = data.get_values()[:,0]
@@ -177,13 +177,13 @@ X_test = transformer.X[int(len(transformer.X) * 0.8):]
 Y_train = transformer.Y[:int(len(transformer.Y) * 0.8)]
 Y_test = transformer.Y[int(len(transformer.Y) * 0.8):]
 
-generator = transformer.create_generator(load_model("generator.h5"))
+"""generator = transformer.create_generator(load_model("generator.h5"))
 print("Generating...")
 
 for similar in generator.generate_similar("Terence Pratchett", branching_factor=2, max_sequence_length=20):
-    print(similar)
+    print(similar)"""
 
-"""model = Sequential()
+model = Sequential()
 model.add(Embedding(transformer.Y.shape[1], transformer.Y.shape[1], input_length=SEQUENCE_LENGTH, mask_zero=True))
 for _ in range(NUMBER_OF_HIDDEN_LAYERS - 1):
     model.add(GRU(LAYER_SIZE, return_sequences=True))
@@ -193,4 +193,4 @@ model.compile(loss='categorical_crossentropy', optimizer='adam')
 for i in range(50):
     model.fit(X_train, Y_train, epochs=1, batch_size=140000, verbose=True, validation_data=(X_test,Y_test))
     print(transformer.generate(model,500))
-    model.save("generator.h5")"""
+    model.save("generator.h5")
