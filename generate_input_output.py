@@ -18,11 +18,13 @@ def generate_pairs(element, max_input_length):
         if len(input) > max_input_length:
             input.pop(0)
     return pairs
+
+SEQUENCE_LENGTH = 4
     
 data = pd.read_csv("data.csv",header=None).get_values().tolist()
 with open("training_data.csv","w+") as output:
     for element in data:
-        pairs = generate_pairs(element[0],7)
+        pairs = generate_pairs(element[0],SEQUENCE_LENGTH)
         for x,y in pairs:
             output.write(x+";" + y + "\n")
     

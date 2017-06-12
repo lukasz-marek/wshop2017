@@ -5,7 +5,7 @@ Created on Tue May 23 18:50:19 2017
 @author: Łukasz Marek
 """
 from random import choice, randrange
-
+from string import ascii_letters
 import pandas as pd
 
 begin_symbol = "^"
@@ -35,31 +35,39 @@ def delete_letter(input):
     letters = list(input)
     del letters[index]
     return "".join(letters)
+
+def insert_random_letter(input):
+    index = randrange(len(input))
+    letters = list(input)
+    letters.insert(index,choice(ascii_letters))
+    return "".join(letters)
     
-"""with open("data.csv","w+") as output:
-    limit = 100000
+with open("data.csv","w+") as output:
+    limit = 1000000
     for _ in range(limit):
         name = choice(names)[0]
         surname = choice(surnames)[0]
-        output.write(begin_symbol + name +" " + surname + end_symbol + "\n")"""
+        output.write(begin_symbol + name +" " + surname + end_symbol + "\n")
         
-functions = [
+"""functions = [
         lambda x: x,
         lambda x: swap_two_random_characters(x),
         lambda x: switch_case(x),
         lambda x: delete_letter(x),
         lambda x: swap_two_random_characters(switch_case(x)),
         lambda x: swap_two_random_characters(delete_letter(x)),
-        lambda x: switch_case(delete_letter(x))                                            
+        lambda x: switch_case(delete_letter(x)),    
+        lambda x: insert_random_letter(x),
+        lambda x: swap_two_random_characters(insert_random_letter(x)),
+        lambda x: delete_letter(insert_random_letter(x))
         ]
         
 with open("data_with_turbulences.csv","w+") as output:
-    limit = 2000000
+    limit = 10000
     for _ in range(limit):
         name = choice(names)[0]
         surname = choice(surnames)[0]
         text = name + " " + surname
+        #function = choice(functions)
         output.write(text + ";" + text + "\n")
-        for _ in range(5):
-            for function in functions:
-                output.write(function(text) + ";" + text + "\n")
+        #output.write(function(text) + ";" + text + "\n")"""

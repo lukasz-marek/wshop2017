@@ -92,16 +92,17 @@ class DataTransformer:
                     break
         return generated
 
+SEQUENCE_LENGTH = 4
        
 data = pd.read_csv("training_data.csv", sep = ";",header = None)
 X = data.get_values()[:,0]
 Y = data.get_values()[:,-1]
 
-transformer = DataTransformer(X,Y,7)
+transformer = DataTransformer(X,Y,SEQUENCE_LENGTH)
 
 
 LAYER_SIZE = 30
-NUMBER_OF_HIDDEN_LAYERS = 2
+NUMBER_OF_HIDDEN_LAYERS = 3
     
 model = Sequential()
 X_train = transformer.X[:int(len(transformer.X) * 0.8)]
@@ -116,6 +117,6 @@ for _ in range(NUMBER_OF_HIDDEN_LAYERS -1):
 model.add(GRU(LAYER_SIZE))
 model.add(Dense(transformer.Y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-for i in range(300):
-    model.fit(X_train, Y_train, epochs=5, batch_size=120000, verbose=True, validation_data=(X_test,Y_test))
+for i in range(50):
+    model.fit(X_train, Y_train, epochs=1, batch_size=180000, verbose=True, validation_data=(X_test,Y_test))
     model.save("generator.h5")
