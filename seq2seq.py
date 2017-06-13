@@ -170,7 +170,7 @@ transformer = DataTransformer(X,Y,SEQUENCE_LENGTH)
 
 
 LAYER_SIZE = 30
-NUMBER_OF_HIDDEN_LAYERS = 3
+NUMBER_OF_HIDDEN_LAYERS = 5
     
 X_train = transformer.X[:int(len(transformer.X) * 0.8)]
 X_test = transformer.X[int(len(transformer.X) * 0.8):]
@@ -191,6 +191,6 @@ model.add(GRU(LAYER_SIZE))
 model.add(Dense(transformer.Y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 for i in range(50):
-    model.fit(X_train, Y_train, epochs=1, batch_size=140000, verbose=True, validation_data=(X_test,Y_test))
+    model.fit(X_train, Y_train, epochs=1, batch_size=80000, verbose=True, validation_data=(X_test,Y_test))
     print(transformer.generate(model,500))
     model.save("generator.h5")
