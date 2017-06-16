@@ -43,7 +43,7 @@ def insert_random_letter(input):
     return "".join(letters)
     
 with open("data.csv","w+") as output:
-    limit = 1000000
+    limit = 5000
     for _ in range(limit):
         name = choice(names)[0]
         surname = choice(surnames)[0]
