@@ -5,7 +5,7 @@ Created on Sun May 21 21:56:35 2017
 @author: Łukasz Marek
 """
 from random import choice, uniform
-from keras.layers.recurrent import LSTM
+from keras.layers.recurrent import LSTM, GRU
 from keras.models import Sequential 
 from keras.utils import np_utils
 from keras.layers import Dense
@@ -33,7 +33,6 @@ class DataTransformer:
     def _reshape(self, x):
         return np.reshape(x, (1, len(x), 1))
 
-        
     def _encode_X(self,X):
         X_Training = []
         for x in X:
@@ -59,33 +58,6 @@ class DataTransformer:
     def decode(self,array):
         decoded = filter(lambda x: x!= DataTransformer._pad,map(lambda x: self._decoder[round(x)],reversed(array.tolist())))
         return "".join(decoded)
-    
-    def generate(self, model, limit = None):
-        def generate_randomizing_vector():
-            seq = []
-            for _ in range(self.Y.shape[1]):
-                seq.append(uniform(0,0.1))
-            return np.array(seq)
-        starter = choice(list(set(self._decoder.values()) 
-        - set([DataTransformer._start, DataTransformer._end, DataTransformer._pad," "]))).upper()
-        pattern = self.encode(DataTransformer._start + starter)
-        pattern_as_list = [DataTransformer._start, starter]
-        prediction = self._decoder[np.argmax(model.predict(pattern, verbose=0) + generate_randomizing_vector())]
-        pattern_as_list.append(prediction)
-        generated = DataTransformer._start + starter + prediction
-        count = limit
-        while prediction != DataTransformer._end:
-            if len(pattern_as_list) > self._sequence_length:
-                pattern_as_list.pop(0)
-            pattern = self.encode("".join(pattern_as_list))
-            prediction = self._decoder[np.argmax(model.predict(pattern, verbose=0) + generate_randomizing_vector())]
-            pattern_as_list.append(prediction)
-            generated += prediction
-            if count != None:
-                count -= 1
-                if count == 0:
-                    break
-        return generated
     
     def create_generator(self, model):
         return Generator(model, self._sequence_length,self._decoder, self._encoder)
@@ -143,9 +115,9 @@ class Generator:
                 if result not in sequences_in_progress:
                     sequences_in_progress.append(result)
         raise StopIteration
-
-    def generate_similar(self, base_text, branching_factor=3, max_sequence_length=25):
-        base_text = DataTransformer._start + base_text + DataTransformer._end
+    
+    def generate_data(self, initial_sequence="", branching_factor=3, max_sequence_length=25):
+        base_text = DataTransformer._start + initial_sequence + DataTransformer._end
         def generate_initial_sequences():
             max_length = len(base_text)
             initial_sequences = []
@@ -159,38 +131,50 @@ class Generator:
             for value in self._generate_suffixes(sequence, branching_factor, max_sequence_length):
                 yield value
         raise StopIteration
-            
-SEQUENCE_LENGTH = 7
        
+#If modified here, change it in generate_input_output.py as well
+SEQUENCE_LENGTH = 7
+  
+#Load data from file     
 data = pd.read_csv("training_data.csv", sep = ";",header = None)
 X = data.get_values()[:,0]
 Y = data.get_values()[:,-1]
 
+#Example of transformer generation - initialization might take a while
 transformer = DataTransformer(X,Y,SEQUENCE_LENGTH)
 
 
-LAYER_SIZE = 30
-NUMBER_OF_HIDDEN_LAYERS = 3
-    
+LAYER_SIZE = 120
+NUMBER_OF_HIDDEN_LAYERS = 6
+
+#Data preparation - preprocessing took place in Transformer
 X_train = transformer.X[:int(len(transformer.X) * 0.8)]
 X_test = transformer.X[int(len(transformer.X) * 0.8):]
 Y_train = transformer.Y[:int(len(transformer.Y) * 0.8)]
 Y_test = transformer.Y[int(len(transformer.Y) * 0.8):]
 
-"""generator = transformer.create_generator(load_model("generator.h5"))
-print("Generating...")
-
-for similar in generator.generate_similar("Terence Pratchett", branching_factor=2, max_sequence_length=20):
-    print(similar)"""
-
+#Model creation
 model = Sequential()
 model.add(Embedding(transformer.Y.shape[1], transformer.Y.shape[1], input_length=SEQUENCE_LENGTH, mask_zero=True))
-for _ in range(NUMBER_OF_HIDDEN_LAYERS - 1):
-    model.add(LSTM(LAYER_SIZE, return_sequences=True, dropout=0.2))
-model.add(LSTM(LAYER_SIZE))
+for number in range(NUMBER_OF_HIDDEN_LAYERS - 1):
+    if number / 2 == 0:
+        model.add(LSTM(LAYER_SIZE, return_sequences=True, dropout=0.3))
+    else:
+        model.add(GRU(LAYER_SIZE, return_sequences=True, dropout=0.3))
+model.add(LSTM(LAYER_SIZE)) if (number + 1) / 2 == 0  else model.add(GRU(LAYER_SIZE)) 
 model.add(Dense(transformer.Y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-for i in range(30):
-    model.fit(X_train, Y_train, epochs=600, batch_size=60000, verbose=True, validation_data=(X_test,Y_test))
-    print(transformer.generate(model,500))
-    model.save("generator.h5")
+
+#Uncomment the following part if model training is necessary
+model.fit(X_train, Y_train, epochs=150, batch_size=20000, verbose=True, validation_data=(X_test,Y_test))
+model.save_weights("generator.h5")
+#Leaving uncommented - due to a bug in keras it's impossible to preserve a model
+
+#Load saved weight
+model.load_weights("generator.h5")
+#Example usage of generator object
+generator = transformer.create_generator(model)
+print("Generating...")
+
+for similar in generator.generate_data(branching_factor=4, max_sequence_length=13):
+    print(similar)

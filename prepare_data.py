@@ -41,10 +41,12 @@ def insert_random_letter(input):
     letters = list(input)
     letters.insert(index,choice(ascii_letters))
     return "".join(letters)
-    
+
+#Number of generated training samples    
+TRAINING_DATA_SIZE = 5000
+
 with open("data.csv","w+") as output:
-    limit = 5000
-    for _ in range(limit):
+    for _ in range(TRAINING_DATA_SIZE):
         name = choice(names)[0]
         surname = choice(surnames)[0]
         output.write(begin_symbol + name +" " + surname + end_symbol + "\n")

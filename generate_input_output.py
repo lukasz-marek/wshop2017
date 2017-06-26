@@ -19,6 +19,7 @@ def generate_pairs(element, max_input_length):
             input.pop(0)
     return pairs
 
+#If modified here, change it in seq2seq.py as well
 SEQUENCE_LENGTH = 7
     
 data = pd.read_csv("data.csv",header=None).get_values().tolist()
